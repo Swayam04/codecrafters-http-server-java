@@ -23,16 +23,15 @@ public class Main {
        String[] input = in.readLine().split(" ");
 
        String method = input[0];
-       String path = input[1];
+       String[] path = input[1].split("/");
 
        OutputStream outputStream = client.getOutputStream();
 
-       if(method.equals("GET") && path.equals("/")) {
-           outputStream.write(("HTTP/1.1 200 OK\r\n\r\n").getBytes());
+       if(method.equals("GET") && (path[1].equals("echo") || path[1].isEmpty())) {
+           outputStream.write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n" + path[2]).getBytes());
        } else {
            outputStream.write(("HTTP/1.1 404 Not Found\r\n\r\n").getBytes());
        }
-       outputStream.flush();
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
      }
