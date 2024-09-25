@@ -40,8 +40,9 @@ public class HttpResponse {
         StringBuilder response = new StringBuilder();
         response.append(version).append(" ").append(status.toString()).append("\r\n");
         if (headers != null && !headers.toString().isEmpty()) {
-            response.append(headers.toString()).append("\r\n");
+            response.append(headers.toString());
         }
+        response.append("\r\n");
         if (body != null && !body.isEmpty()) {
             response.append(body);
         }
