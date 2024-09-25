@@ -12,14 +12,12 @@ public class HttpResponse {
         this.request = request;
         this.version = request.getVersion();
         setStatus();
-        if(request.getPath().equals("/user-agent")) {
-            setHeaders();
-            setBody();
-        }
+        setHeaders();
+        setBody();
     }
 
     private void setStatus() {
-        if(request.getPath().equals("/") || request.getPath().startsWith("/echo") || request.getPath().equals("/user-agent")) {
+        if(request.getPath().equals("/") || request.getPath().equals("/user-agent") || request.getPath().startsWith("/echo")) {
             status = HttpStatus.OK;
         } else {
             status = HttpStatus.NOT_FOUND;
@@ -27,13 +25,23 @@ public class HttpResponse {
     }
 
     private void setHeaders() {
-        headers = new HttpHeaders();
-        headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
-        headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(request.getHeaders().get("User-Agent").length()));
+        if(request.getPath().equals("/user-agent") || request.getPath().startsWith("/echo")) {
+            headers = new HttpHeaders();
+            headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
+            if(request.getPath().startsWith("/user-agent")) {
+                headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(request.getHeaders().get("User-Agent").length()));
+            } else {
+                headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(request.getPath().substring(6).length()));
+            }
+        }
     }
 
     private void setBody() {
-        body = request.getHeaders().get("User-Agent");
+        if(request.getPath().startsWith("/user-agent")) {
+            body = request.getHeaders().get("User-Agent");
+        } else if(request.getPath().startsWith("/echo")) {
+            body = request.getPath().substring(6);
+        }
     }
 
     public String respond() {
