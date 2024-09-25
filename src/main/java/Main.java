@@ -23,16 +23,16 @@ public class Main {
        String[] input = in.readLine().split(" ");
 
        String method = input[0];
-       String[] path = input[1].split("/");
-
+       String path = input[1];
+       String[] pathVars = !path.isEmpty() ? path.split("/") : new String[0];
        OutputStream outputStream = client.getOutputStream();
 
-       if(method.equals("GET") && path.length <= 1) {
+       if(method.equals("GET") && (path.isEmpty() || path.equals("/"))) {
            outputStream.write(("HTTP/1.1 200 OK\r\n\r\n").getBytes());
-       } else if(method.equals("GET") && path[1].equals("echo")) {
-           int len = path[path.length - 1].length();
+       } else if(method.equals("GET") && pathVars[1].equals("echo")) {
+           int len = pathVars[pathVars.length - 1].length();
            outputStream.write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
-                   + len + "\r\n\r\n" + path[path.length - 1]).getBytes());
+                   + len + "\r\n\r\n" + pathVars[pathVars.length - 1]).getBytes());
        } else {
            outputStream.write(("HTTP/1.1 404 Not Found\r\n\r\n").getBytes());
        }
