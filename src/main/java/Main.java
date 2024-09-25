@@ -27,8 +27,12 @@ public class Main {
 
        OutputStream outputStream = client.getOutputStream();
 
-       if(method.equals("GET") && (path[1].equals("echo") || path[1].isEmpty())) {
-           outputStream.write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n" + path[2]).getBytes());
+       if(method.equals("GET") && path.length <= 1) {
+           outputStream.write(("HTTP/1.1 200 OK\r\n\r\n").getBytes());
+       } else if(method.equals("GET") && path[1].equals("echo")) {
+           int len = path[path.length - 1].length();
+           outputStream.write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
+                   + len + "\r\n\r\n" + path[path.length - 1]).getBytes());
        } else {
            outputStream.write(("HTTP/1.1 404 Not Found\r\n\r\n").getBytes());
        }
