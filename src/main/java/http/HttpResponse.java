@@ -48,6 +48,10 @@ public class HttpResponse {
         return request;
     }
 
+    public int getStatus() {
+        return status.getCode();
+    }
+
     private void setStatus(HttpStatus status) {
         this.status = status;
     }

@@ -1,6 +1,8 @@
 package utils;
 
 import http.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpRequestParser {
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequestParser.class);
 
     public static HttpRequest parse(BufferedReader reader) throws IOException {
         String requestLine = reader.readLine();
@@ -21,6 +24,8 @@ public class HttpRequestParser {
         String method = statusLine[0];
         String path = statusLine[1];
         String version = statusLine[2];
+
+        logger.info("Processing request: {} {}", method, path);
 
         HttpRequest.RequestBuilder builder = new HttpRequest.RequestBuilder()
                 .method(method)
