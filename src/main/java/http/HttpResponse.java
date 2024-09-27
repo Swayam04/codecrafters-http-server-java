@@ -7,10 +7,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class HttpResponse {
 
@@ -117,7 +116,7 @@ public class HttpResponse {
         @Override
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
-            String echoString = request.getPath().substring(6);
+            String echoString = request.getPath().substring("/echo/".length());
             response.setStatus(HttpStatus.OK);
             response.setHeaders(new HttpHeaders());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
@@ -127,22 +126,30 @@ public class HttpResponse {
     }
 
     private static class FileHandler implements ResponseHandler {
+        private final Path basePath;
+
+        public FileHandler() {
+            basePath = Paths.get("/tmp/");
+        }
+
         @Override
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
-            String fileName = request.getPath().substring(7);
-            Path filePath = Paths.get(fileName);
+            String fileName = request.getPath().substring("/files/".length());
+            Path filePath = basePath.resolve(fileName).normalize();
+
             if(Files.exists(filePath)) {
                 logger.info("File found: {}", fileName);
-                try(Stream<String> lines = Files.lines(filePath)) {
-                    String fileContent = lines.collect(Collectors.joining(""));
+                try {
+                    byte[] fileContent = Files.readAllBytes(filePath);
                     response.setStatus(HttpStatus.OK);
                     response.setHeaders(new HttpHeaders());
                     response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
-                    response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length()));
-                    response.setBody(fileContent);
+                    response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length));
+                    response.setBody(Arrays.toString(fileContent));
                 } catch (IOException e) {
                     logger.error("Error while reading file: {}", fileName, e);
+                    new InternalServerErrorHandler().handle(response);
                 }
             } else {
                 logger.info("File not found: {}", fileName);
@@ -155,6 +162,20 @@ public class HttpResponse {
         @Override
         public void handle(HttpResponse response) {
             response.setStatus(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private static class ForbiddenHandler implements ResponseHandler {
+        @Override
+        public void handle(HttpResponse response) {
+            response.setStatus(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private static class InternalServerErrorHandler implements ResponseHandler {
+        @Override
+        public void handle(HttpResponse response) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
