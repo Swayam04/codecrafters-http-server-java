@@ -1,7 +1,16 @@
 package http;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HttpResponse {
 
@@ -10,6 +19,7 @@ public class HttpResponse {
     private HttpHeaders headers;
     private String body;
     private final HttpRequest request;
+    private static final Logger logger = LoggerFactory.getLogger(HttpResponse.class);
 
     private static final Map<String, ResponseHandler> responseHandlers = new HashMap<>();
 
@@ -17,6 +27,7 @@ public class HttpResponse {
         responseHandlers.put("/", new RootHandler());
         responseHandlers.put("/echo/", new EchoHandler());
         responseHandlers.put("/user-agent", new UserAgentHandler());
+        responseHandlers.put("/files/", new FileHandler());
     }
 
     public HttpResponse(HttpRequest request) {
@@ -112,6 +123,31 @@ public class HttpResponse {
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
             response.setBody(echoString);
+        }
+    }
+
+    private static class FileHandler implements ResponseHandler {
+        @Override
+        public void handle(HttpResponse response) {
+            HttpRequest request = response.getRequest();
+            String fileName = request.getPath().substring(6);
+            Path filePath = Paths.get(fileName);
+            if(Files.exists(filePath)) {
+                logger.info("File found: {}", fileName);
+                try(Stream<String> lines = Files.lines(filePath)) {
+                    String fileContent = lines.collect(Collectors.joining(""));
+                    response.setStatus(HttpStatus.OK);
+                    response.setHeaders(new HttpHeaders());
+                    response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
+                    response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length()));
+                    response.setBody(fileContent);
+                } catch (IOException e) {
+                    logger.error("Error while reading file: {}", fileName, e);
+                }
+            } else {
+                logger.info("File not found: {}", fileName);
+                new NotFoundHandler().handle(response);
+            }
         }
     }
 
