@@ -137,6 +137,7 @@ public class HttpResponse {
             HttpRequest request = response.getRequest();
             String fileName = request.getPath().substring("/files/".length());
             Path filePath = basePath.resolve(fileName).normalize();
+            logger.info("Looking for file {} in Directory {}", filePath, basePath);
 
             if(Files.exists(filePath)) {
                 logger.info("File found: {}", fileName);
