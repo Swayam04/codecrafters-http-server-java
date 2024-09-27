@@ -69,6 +69,7 @@ public class HttpResponse {
                        }
                     }).findAny().map(Map.Entry::getValue)
                     .orElse(new BadRequestHandler());
+            responseHandler.handle(this);
         }
     }
 
