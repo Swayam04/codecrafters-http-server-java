@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -154,7 +155,7 @@ public class HttpResponse {
                     response.setHeaders(new HttpHeaders());
                     response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
                     response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length));
-                    response.setBody(Arrays.toString(fileContent));
+                    response.setBody(new String(fileContent, StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     logger.error("Error while reading file: {}", fileName, e);
                     new InternalServerErrorHandler().handle(response);
