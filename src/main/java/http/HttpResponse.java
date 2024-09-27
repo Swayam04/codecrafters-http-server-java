@@ -19,6 +19,7 @@ public class HttpResponse {
     private String body;
     private final HttpRequest request;
     private static final Logger logger = LoggerFactory.getLogger(HttpResponse.class);
+    private final String[] commandLineArguments;
 
     private static final Map<String, ResponseHandler> responseHandlers = new HashMap<>();
 
@@ -29,9 +30,10 @@ public class HttpResponse {
         responseHandlers.put("/files/", new FileHandler());
     }
 
-    public HttpResponse(HttpRequest request) {
+    public HttpResponse(HttpRequest request, String[] args) {
         this.request = request;
         this.version = request.getVersion();
+        commandLineArguments = args;
         processRequest();
     }
 
@@ -56,6 +58,10 @@ public class HttpResponse {
 
     private HttpRequest getRequest() {
         return request;
+    }
+
+    private String[] getCommandLineArguments() {
+        return commandLineArguments;
     }
 
     public int getStatus() {
@@ -126,18 +132,19 @@ public class HttpResponse {
     }
 
     private static class FileHandler implements ResponseHandler {
-        private final Path basePath;
-
-        public FileHandler() {
-            basePath = Paths.get(System.getProperty("user.dir")).normalize().toAbsolutePath();
-        }
-
         @Override
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
             String fileName = request.getPath().substring("/files/".length());
+            String baseDirectory = parseArguments(response.getCommandLineArguments());
+            if(baseDirectory == null) {
+                new ForbiddenHandler().handle(response);
+                return;
+            }
+            Path basePath = Paths.get(baseDirectory);
             Path filePath = basePath.resolve(fileName).normalize();
-            logger.info("Looking for file {} in Directory {}", filePath, basePath);
+
+            logger.info("Looking for file {} in path {}", fileName, filePath);
 
             if(Files.exists(filePath)) {
                 logger.info("File found: {}", fileName);
@@ -156,6 +163,15 @@ public class HttpResponse {
                 logger.info("File not found: {}", fileName);
                 new NotFoundHandler().handle(response);
             }
+        }
+
+        private String parseArguments(String[] arguments) {
+            for (int i = 0; i < arguments.length - 1; i++) {
+                if (arguments[i].equals("--directory")) {
+                    return arguments[i + 1];
+                }
+            }
+            return null;
         }
     }
 

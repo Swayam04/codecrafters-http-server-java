@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,10 +21,12 @@ public class HttpServerSocket {
     private final int PORT = 4221;
     private final ExecutorService executor;
     private static final Logger logger = LoggerFactory.getLogger(HttpServerSocket.class);
+    private final String[] commandLineArgs;
 
-    public HttpServerSocket() throws IOException {
+    public HttpServerSocket(String[] args) throws IOException {
         serverSocket = new ServerSocket(PORT);
         serverSocket.setReuseAddress(true);
+        commandLineArgs = Arrays.copyOfRange(args, 0, args.length);
         executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
@@ -38,7 +41,7 @@ public class HttpServerSocket {
                     try {
                         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                         HttpRequest request = HttpRequestParser.parse(in);
-                        HttpResponse response = new HttpResponse(request);
+                        HttpResponse response = new HttpResponse(request, commandLineArgs);
                         OutputStream os = clientSocket.getOutputStream();
                         os.write(response.respond().getBytes());
                         logger.info("Request completed: {} {}, Status: {}", request.getMethod(), request.getPath(), response.getStatus());
