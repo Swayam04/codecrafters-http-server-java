@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,13 +21,15 @@ public class HttpResponse {
     private static final Logger logger = LoggerFactory.getLogger(HttpResponse.class);
     private final String[] commandLineArguments;
 
-    private static final Map<String, ResponseHandler> responseHandlers = new HashMap<>();
+    private static final Map<String, ResponseHandler> getResponseHandlers = new HashMap<>();
+    private static final Map<String, ResponseHandler> postResponseHandlers = new HashMap<>();
 
     static {
-        responseHandlers.put("/", new RootHandler());
-        responseHandlers.put("/echo/", new EchoHandler());
-        responseHandlers.put("/user-agent", new UserAgentHandler());
-        responseHandlers.put("/files/", new FileHandler());
+        getResponseHandlers.put("/", new RootHandler());
+        getResponseHandlers.put("/echo/", new EchoHandler());
+        getResponseHandlers.put("/user-agent", new UserAgentHandler());
+        getResponseHandlers.put("/files/", new FileHandler());
+        postResponseHandlers.put("/files/", new FilesPostHandler());
     }
 
     public HttpResponse(HttpRequest request, String[] args) {
@@ -39,22 +40,36 @@ public class HttpResponse {
     }
 
     private void processRequest() {
-        ResponseHandler responseHandler = responseHandlers.entrySet().stream()
-                .filter(entry -> {
-                    String key = entry.getKey();
-                    String path = request.getPath();
-                    if (key.equals("/")) {
-                        return path.equals("/");
-                    } else if (key.endsWith("/")) {
-                        return path.startsWith(key);
-                    } else {
-                        return path.equals(key);
-                    }
-                })
-                .findAny()
-                .map(Map.Entry::getValue)
-                .orElse(new NotFoundHandler());
-        responseHandler.handle(this);
+        if(request.getMethod().equals("GET")) {
+            ResponseHandler responseHandler = getResponseHandlers.entrySet().stream()
+                    .filter(entry -> {
+                        String key = entry.getKey();
+                        String path = request.getPath();
+                        if (key.equals("/")) {
+                            return path.equals("/");
+                        } else if (key.endsWith("/")) {
+                            return path.startsWith(key);
+                        } else {
+                            return path.equals(key);
+                        }
+                    })
+                    .findAny()
+                    .map(Map.Entry::getValue)
+                    .orElse(new NotFoundHandler());
+            responseHandler.handle(this);
+        } else if(request.getMethod().equals("POST")) {
+            ResponseHandler responseHandler = postResponseHandlers.entrySet().stream()
+                    .filter(entry -> {
+                       String key = entry.getKey();
+                       String path = request.getPath();
+                       if(key.equals("/files/")) {
+                           return path.startsWith(key);
+                       } else {
+                           return path.equals(key);
+                       }
+                    }).findAny().map(Map.Entry::getValue)
+                    .orElse(new BadRequestHandler());
+        }
     }
 
     private HttpRequest getRequest() {
@@ -194,6 +209,46 @@ public class HttpResponse {
         @Override
         public void handle(HttpResponse response) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static class BadRequestHandler implements ResponseHandler {
+        @Override
+        public void handle(HttpResponse response) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public static class FilesPostHandler implements ResponseHandler {
+        @Override
+        public void handle(HttpResponse response) {
+            HttpRequest request = response.getRequest();
+            String fileName = request.getPath().substring("/files/".length());
+            String contents = String.valueOf(request.getBody());
+            String baseDirectory = parseArguments(response.getCommandLineArguments());
+            if(baseDirectory == null) {
+                new ForbiddenHandler().handle(response);
+                return;
+            }
+            Path filePath = Paths.get(baseDirectory).resolve(fileName).normalize();
+            logger.info("Creating file in path: {}", filePath);
+
+            try {
+                Files.writeString(filePath, contents);
+                response.setStatus(HttpStatus.CREATED);
+            } catch (IOException e) {
+                logger.error("Error while writing file: {}", fileName, e);
+                new InternalServerErrorHandler().handle(response);
+            }
+        }
+
+        private String parseArguments(String[] arguments) {
+            for (int i = 0; i < arguments.length - 1; i++) {
+                if (arguments[i].equals("--directory")) {
+                    return arguments[i + 1];
+                }
+            }
+            return null;
         }
     }
 
