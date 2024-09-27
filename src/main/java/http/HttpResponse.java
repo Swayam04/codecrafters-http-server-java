@@ -225,7 +225,10 @@ public class HttpResponse {
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
             String fileName = request.getPath().substring("/files/".length());
-            String contents = String.valueOf(request.getBody());
+            String contents = "";
+            if(request.getBody().isPresent()) {
+                contents = request.getBody().get();
+            }
             String baseDirectory = parseArguments(response.getCommandLineArguments());
             if(baseDirectory == null) {
                 new ForbiddenHandler().handle(response);
