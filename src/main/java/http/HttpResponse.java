@@ -129,7 +129,7 @@ public class HttpResponse {
         private final Path basePath;
 
         public FileHandler() {
-            basePath = Paths.get("/tmp/");
+            basePath = Paths.get(System.getProperty("user.dir")).normalize().toAbsolutePath();
         }
 
         @Override
