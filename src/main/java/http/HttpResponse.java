@@ -32,6 +32,16 @@ public class HttpResponse {
         postResponseHandlers.put("/files/", new FilesPostHandler());
     }
 
+    public static String parseDirectoryArgument(String[] arguments) {
+        for (int i = 0; i < arguments.length - 1; i++) {
+            if (arguments[i].equals("--directory")) {
+                return arguments[i + 1];
+            }
+        }
+        return null;
+    }
+
+
     public HttpResponse(HttpRequest request, String[] args) {
         this.request = request;
         this.version = request.getVersion();
@@ -40,37 +50,18 @@ public class HttpResponse {
     }
 
     private void processRequest() {
-        if(request.getMethod().equals("GET")) {
-            ResponseHandler responseHandler = getResponseHandlers.entrySet().stream()
-                    .filter(entry -> {
-                        String key = entry.getKey();
-                        String path = request.getPath();
-                        if (key.equals("/")) {
-                            return path.equals("/");
-                        } else if (key.endsWith("/")) {
-                            return path.startsWith(key);
-                        } else {
-                            return path.equals(key);
-                        }
-                    })
-                    .findAny()
-                    .map(Map.Entry::getValue)
-                    .orElse(new NotFoundHandler());
-            responseHandler.handle(this);
-        } else if(request.getMethod().equals("POST")) {
-            ResponseHandler responseHandler = postResponseHandlers.entrySet().stream()
-                    .filter(entry -> {
-                       String key = entry.getKey();
-                       String path = request.getPath();
-                       if(key.equals("/files/")) {
-                           return path.startsWith(key);
-                       } else {
-                           return path.equals(key);
-                       }
-                    }).findAny().map(Map.Entry::getValue)
-                    .orElse(new BadRequestHandler());
-            responseHandler.handle(this);
-        }
+        ResponseHandler responseHandler = request.getMethod().equals("GET") ?
+                getResponseHandlers.getOrDefault(findPathKey(getResponseHandlers, request.getPath()), new NotFoundHandler()) :
+                postResponseHandlers.getOrDefault(findPathKey(postResponseHandlers, request.getPath()), new BadRequestHandler());
+
+        responseHandler.handle(this);
+    }
+
+    private String findPathKey(Map<String, ResponseHandler> handlers, String path) {
+        return handlers.keySet().stream()
+                .filter(key -> key.equals("/") ? path.equals("/") : path.startsWith(key))
+                .findFirst()
+                .orElse(null);
     }
 
     private HttpRequest getRequest() {
@@ -153,7 +144,7 @@ public class HttpResponse {
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
             String fileName = request.getPath().substring("/files/".length());
-            String baseDirectory = parseArguments(response.getCommandLineArguments());
+            String baseDirectory = parseDirectoryArgument(response.getCommandLineArguments());
             if(baseDirectory == null) {
                 new ForbiddenHandler().handle(response);
                 return;
@@ -180,15 +171,6 @@ public class HttpResponse {
                 logger.info("File not found: {}", fileName);
                 new NotFoundHandler().handle(response);
             }
-        }
-
-        private String parseArguments(String[] arguments) {
-            for (int i = 0; i < arguments.length - 1; i++) {
-                if (arguments[i].equals("--directory")) {
-                    return arguments[i + 1];
-                }
-            }
-            return null;
         }
     }
 
@@ -229,7 +211,7 @@ public class HttpResponse {
             if(request.getBody().isPresent()) {
                 contents = request.getBody().get();
             }
-            String baseDirectory = parseArguments(response.getCommandLineArguments());
+            String baseDirectory = parseDirectoryArgument(response.getCommandLineArguments());
             if(baseDirectory == null) {
                 new ForbiddenHandler().handle(response);
                 return;
@@ -244,15 +226,6 @@ public class HttpResponse {
                 logger.error("Error while writing file: {}", fileName, e);
                 new InternalServerErrorHandler().handle(response);
             }
-        }
-
-        private String parseArguments(String[] arguments) {
-            for (int i = 0; i < arguments.length - 1; i++) {
-                if (arguments[i].equals("--directory")) {
-                    return arguments[i + 1];
-                }
-            }
-            return null;
         }
     }
 
