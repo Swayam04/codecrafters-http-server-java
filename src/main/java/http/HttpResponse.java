@@ -130,7 +130,7 @@ public class HttpResponse {
         @Override
         public void handle(HttpResponse response) {
             HttpRequest request = response.getRequest();
-            String fileName = request.getPath().substring(6);
+            String fileName = request.getPath().substring(7);
             Path filePath = Paths.get(fileName);
             if(Files.exists(filePath)) {
                 logger.info("File found: {}", fileName);
