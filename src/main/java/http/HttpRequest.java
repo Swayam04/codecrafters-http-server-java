@@ -1,6 +1,5 @@
 package http;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,7 +8,7 @@ public class HttpRequest {
     private final String method;
     private final String path;
     private final String version;
-    private final Map<String, String> headers;
+    private final HttpHeaders headers;
     private final Optional<String> body;
 
     public HttpRequest(RequestBuilder requestBuilder) {
@@ -25,7 +24,7 @@ public class HttpRequest {
     }
 
     public Map<String, String> getHeaders() {
-        return headers;
+        return headers.getHeaders();
     }
 
     public String getVersion() {
@@ -44,7 +43,7 @@ public class HttpRequest {
         private String method;
         private String path;
         private String version;
-        private final Map<String, String> headers = new HashMap<>();
+        private final HttpHeaders headers = new HttpHeaders();
         private String body;
 
         public RequestBuilder method(String method) {
@@ -63,7 +62,7 @@ public class HttpRequest {
         }
 
         public RequestBuilder addHeaders(Map<String, String> headers) {
-            this.headers.putAll(headers);
+            this.headers.addAllHeaders(headers);
             return this;
         }
 

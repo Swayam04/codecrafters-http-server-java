@@ -41,7 +41,6 @@ public class HttpResponse {
         return null;
     }
 
-
     public HttpResponse(HttpRequest request, String[] args) {
         this.request = request;
         this.version = request.getVersion();
@@ -135,6 +134,10 @@ public class HttpResponse {
             response.setHeaders(new HttpHeaders());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
+            if(request.getHeaders().containsKey(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
+                response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
+                        request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName()));
+            }
             response.setBody(echoString);
         }
     }

@@ -5,7 +5,9 @@ public enum CommonHeaders {
     ACCEPT("Accept"),
     USER_AGENT("User-Agent"),
     CONTENT_LENGTH("Content-Length"),
-    HOST("Host");
+    HOST("Host"),
+    ACCEPT_ENCODING("Accept-Encoding"),
+    CONTENT_ENCODING("Content-Encoding");
 
     private final String headerName;
     CommonHeaders(String headerName) {

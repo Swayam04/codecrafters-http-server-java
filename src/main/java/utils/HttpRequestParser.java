@@ -1,5 +1,6 @@
 package utils;
 
+import http.CommonHeaders;
 import http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,14 @@ public class HttpRequestParser {
             if (index > 0) {
                 String key = headerLine.substring(0, index).trim();
                 String value = headerLine.substring(index + 1).trim();
+                if(key.equals(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
+                    String SUPPORTED_ENCODING = "gzip";
+                    if(value.contains(SUPPORTED_ENCODING)) {
+                        value = SUPPORTED_ENCODING;
+                    } else {
+                        continue;
+                    }
+                }
                 headers.put(key, value);
             }
         }

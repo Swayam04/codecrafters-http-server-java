@@ -15,9 +15,17 @@ public class HttpHeaders {
         headers.put(name, value);
     }
 
+    public void addAllHeaders(Map<String, String> headers) {
+        this.headers.putAll(headers);
+    }
+
     public void addCommonHeader(CommonHeaders header, String value) {
         headers.put(header.getHeaderName(), value);
     }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    };
 
     @Override
     public String toString() {
