@@ -3,13 +3,16 @@ package http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 public class HttpResponse {
 
@@ -133,12 +136,26 @@ public class HttpResponse {
             response.setStatus(HttpStatus.OK);
             response.setHeaders(new HttpHeaders());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
-            response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
             if(request.getHeaders().containsKey(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
                         request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName()));
             }
+            echoString = compressString(echoString);
+            logger.info("String: {} of length: {}", echoString, echoString.length());
+            response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
             response.setBody(echoString);
+        }
+
+        private static String compressString(String str) {
+            try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
+                gzipOutputStream.finish();
+                return Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+            } catch(IOException e) {
+                logger.error("Error compressing string", e);
+                return str;
+            }
         }
     }
 
