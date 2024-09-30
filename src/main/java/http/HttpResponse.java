@@ -140,6 +140,7 @@ public class HttpResponse {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
                         request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName()));
                 echoString = compressString(echoString);
+                response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
             }
             logger.info("String: {} of length: {}", echoString, echoString.length());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
