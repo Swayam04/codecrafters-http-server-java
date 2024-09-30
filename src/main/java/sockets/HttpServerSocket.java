@@ -43,7 +43,8 @@ public class HttpServerSocket {
                         HttpRequest request = HttpRequestParser.parse(in);
                         HttpResponse response = new HttpResponse(request, commandLineArgs);
                         OutputStream os = clientSocket.getOutputStream();
-                        os.write(response.respond().getBytes());
+                        os.write(response.writeStatusAndHeaders().getBytes());
+                        os.write(response.writeBody());
                         logger.info("Request completed: {} {}, Status: {}", request.getMethod(), request.getPath(), response.getStatus());
                         os.close();
                     } catch (IOException e) {

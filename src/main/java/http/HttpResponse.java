@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -19,7 +18,7 @@ public class HttpResponse {
     private final String version;
     private HttpStatus status;
     private HttpHeaders headers;
-    private String body;
+    private byte[] body;
     private final HttpRequest request;
     private static final Logger logger = LoggerFactory.getLogger(HttpResponse.class);
     private final String[] commandLineArguments;
@@ -86,21 +85,22 @@ public class HttpResponse {
         this.headers = headers;
     }
 
-    private void setBody(String body) {
+    private void setBody(byte[] body) {
         this.body = body;
     }
 
-    public String respond() {
+    public String writeStatusAndHeaders() {
         StringBuilder response = new StringBuilder();
         response.append(version).append(" ").append(status.toString()).append("\r\n");
         if (headers != null && !headers.toString().isEmpty()) {
             response.append(headers.toString());
         }
         response.append("\r\n");
-        if (body != null && !body.isEmpty()) {
-            response.append(body);
-        }
         return response.toString();
+    }
+
+    public byte[] writeBody() {
+        return body;
     }
 
     private interface ResponseHandler {
@@ -124,7 +124,7 @@ public class HttpResponse {
             response.setHeaders(new HttpHeaders());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(userAgent.length()));
-            response.setBody(userAgent);
+            response.setBody(userAgent.trim().getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -143,11 +143,10 @@ public class HttpResponse {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
                         request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName().trim()));
                 responseBody = compressString(echoString);
-                response.setBody(new String(responseBody, StandardCharsets.ISO_8859_1));
             } else {
                 responseBody = echoString.getBytes(StandardCharsets.UTF_8);
-                response.setBody(echoString);
             }
+            response.setBody(responseBody);
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(responseBody.length));
         }
 
@@ -187,7 +186,7 @@ public class HttpResponse {
                     response.setHeaders(new HttpHeaders());
                     response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
                     response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length));
-                    response.setBody(new String(fileContent, StandardCharsets.UTF_8));
+                    response.setBody(fileContent);
                 } catch (IOException e) {
                     logger.error("Error while reading file: {}", fileName, e);
                     new InternalServerErrorHandler().handle(response);
