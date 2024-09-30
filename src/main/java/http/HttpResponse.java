@@ -138,9 +138,8 @@ public class HttpResponse {
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
             if(request.getHeaders().containsKey(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
-                        request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName()));
+                        request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName().trim()));
                 echoString = compressString(echoString);
-                response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "application/octet-stream");
             }
             logger.info("String: {} of length: {}", echoString, echoString.length());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
@@ -152,7 +151,7 @@ public class HttpResponse {
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
                 gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
                 gzipOutputStream.finish();
-                return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
+                return byteArrayOutputStream.toString(StandardCharsets.ISO_8859_1);
             } catch(IOException e) {
                 logger.error("Error compressing string", e);
                 return str;
