@@ -139,8 +139,8 @@ public class HttpResponse {
             if(request.getHeaders().containsKey(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
                         request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName()));
+                echoString = compressString(echoString);
             }
-            echoString = compressString(echoString);
             logger.info("String: {} of length: {}", echoString, echoString.length());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
             response.setBody(echoString);
