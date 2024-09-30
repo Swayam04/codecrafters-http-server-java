@@ -151,7 +151,7 @@ public class HttpResponse {
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
                 gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
                 gzipOutputStream.finish();
-                return Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+                return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
             } catch(IOException e) {
                 logger.error("Error compressing string", e);
                 return str;
