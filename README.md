@@ -1,38 +1,63 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/4e1cbf58-0893-4d61-a92c-d180d1922a97)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Basic HTTP Server
 
-This is a starting point for Java solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+This project is an implementation of a basic HTTP server, built as part of a step-by-step, unguided and TDD based [Codecrafters](https://app.codecrafters.io) challenge.
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+## Core Features
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+- **Port Binding**: Listens for incoming connections on a specified port.
+- **200 OK Response**: Responds with a basic `200 OK` status.
+- **URL Path Parsing**: Extracts the requested resource from incoming requests.
+- **Response Body Handling**: Sends simple content in the response body.
+- **HTTP Header Parsing**: Reads and processes HTTP headers.
+- **Concurrent Connections**: Handles multiple requests concurrently using `ExecutorService`.
+- **File Handling**: Serves static files or creates new files based on command-line input.
+- **Request Body Processing**: Handles requests with a body (e.g., POST).
+- **Compression**: Supports `gzip` compression for efficient content delivery.
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Object-Oriented Design & Patterns
 
-# Passing the first stage
+The project follows Object-Oriented principles, utilizing:
+- **Builder Pattern** for constructing request/response objects.
+- **Factory Pattern** for routing different endpoint requests.
 
-The entry point for your HTTP server implementation is in
-`src/main/java/Main.java`. Study and uncomment the relevant code, and push your
-changes to pass the first stage:
+## Technology Stack
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+- **Java**
+- **Maven**
+- **SLF4J & Logback** for logging.
+
+## Usage
+
+### Compile
+
+```bash
+cd "$(dirname "$0")"
+mvn -B package -Ddir=/path/to/build
 ```
 
-Time to move on to the next stage!
+### Run
 
-# Stage 2 & beyond
+```bash
+java -jar /tmp/codecrafters-build-http-server-java/java_http.jar --directory <file_directory>
+```
 
-Note: This section is for stages 2 and beyond.
+Replace `<server_port>` with the desired port and `<file_directory>` with the target directory for file handling.
 
-1. Ensure you have `java (21)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## Additional Features
+
+- **Concurrent Request Handling** via `ExecutorService`.
+- **Gzip Compression** for bandwidth optimization using `GZIPOutputStream`.
+- **Static File Serving** and file creation support using `java.nio.file` package in a directory passed as command-line argument.
+
+## Future Enhancements
+
+Planned improvements:
+- **Range Requests** for partial content responses.
+- **HTTP Pipelining** for handling multiple requests over a single connection.
+- **E-Tag Caching** for more efficient caching mechanisms.
+
+## Acknowledgments
+
+This project was built as part of the Codecrafters challenge, with all implementation done independently.
+
+---
