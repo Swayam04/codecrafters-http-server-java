@@ -136,25 +136,30 @@ public class HttpResponse {
             response.setStatus(HttpStatus.OK);
             response.setHeaders(new HttpHeaders());
             response.headers.addCommonHeader(CommonHeaders.CONTENT_TYPE, "text/plain");
+
+            byte[] responseBody;
+
             if(request.getHeaders().containsKey(CommonHeaders.ACCEPT_ENCODING.getHeaderName())) {
                 response.headers.addCommonHeader(CommonHeaders.CONTENT_ENCODING,
                         request.getHeaders().get(CommonHeaders.ACCEPT_ENCODING.getHeaderName().trim()));
-                echoString = compressString(echoString);
+                responseBody = compressString(echoString);
+                response.setBody(new String(responseBody, StandardCharsets.ISO_8859_1));
+            } else {
+                responseBody = echoString.getBytes(StandardCharsets.UTF_8);
+                response.setBody(echoString);
             }
-            logger.info("String: {} of length: {}", echoString, echoString.length());
-            response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(echoString.length()));
-            response.setBody(echoString);
+            response.headers.addCommonHeader(CommonHeaders.CONTENT_LENGTH, String.valueOf(responseBody.length));
         }
 
-        private static String compressString(String str) {
+        private static byte[] compressString(String str) {
             try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
                 gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
                 gzipOutputStream.finish();
-                return byteArrayOutputStream.toString(StandardCharsets.ISO_8859_1);
+                return byteArrayOutputStream.toByteArray();
             } catch(IOException e) {
                 logger.error("Error compressing string", e);
-                return str;
+                return str.getBytes(StandardCharsets.UTF_8);
             }
         }
     }
