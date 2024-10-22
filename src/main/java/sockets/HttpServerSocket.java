@@ -27,7 +27,7 @@ public class HttpServerSocket {
         serverSocket = new ServerSocket(PORT);
         serverSocket.setReuseAddress(true);
         commandLineArgs = Arrays.copyOfRange(args, 0, args.length);
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        executor = Executors.newVirtualThreadPerTaskExecutor();
     }
 
     public void listen() {

@@ -38,7 +38,7 @@ mvn -B package -Ddir=/path/to/build
 ### Run
 
 ```bash
-java -jar /tmp/codecrafters-build-http-server-java/java_http.jar --directory <file_directory>
+java -jar /your/path/codecrafters-build-http-server-java/target/build-your-own-http-1.0.jar --directory <file_directory>
 ```
 
 Replace `<server_port>` with the desired port and `<file_directory>` with the target directory for file handling.
